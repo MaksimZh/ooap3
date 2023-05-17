@@ -199,7 +199,23 @@ class ExtendableEntitySet(EntitySet):
 
 
 class System(ABC):
+
+    # COMMANDS
     
+    # Run system on the world at another frame
     @abstractmethod
     def run(self, world: World, frame_time: Timems) -> None:
+        assert False
+
+    # Clean all data before exit
+    @abstractmethod
+    def clean(self) -> None:
+        assert False
+
+
+    # QUERIES
+
+    # Check if system requests quit the game
+    @abstractmethod
+    def requests_quit(self) -> bool:
         assert False
