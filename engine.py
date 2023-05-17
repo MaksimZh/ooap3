@@ -1,8 +1,21 @@
+from dataclasses import dataclass
 import pygame as pg
 from ecs import *
 
 FPS = 30
 BACKGROUND_COLOR = (0, 0, 32)
+
+sprites = pg.image.load("sprites.png")
+
+@dataclass
+class ScreenPosition(Component):
+    x: int
+    y: int
+
+@dataclass
+class Sprite(Component):
+    source: pg.Surface
+    rect: pg.Rect
 
 
 class GraphicsSystem(System):
@@ -15,6 +28,13 @@ class GraphicsSystem(System):
 
     def run(self, world: World, frame_time: Timems) -> None:
         self.__screen.fill(BACKGROUND_COLOR)
+        entities = world.get_entities({Sprite, ScreenPosition}, set())
+        while not entities.is_empty():
+            e = entities.get_entity()
+            sprite: Sprite = world.get_component(e, Sprite) #type: ignore
+            pos: ScreenPosition = world.get_component(e, ScreenPosition) #type: ignore
+            self.__screen.blit(sprite.source, (pos.x, pos.y), sprite.rect)
+            entities.remove_entity(e)
         pg.display.update()
 
     def clean(self) -> None:
@@ -87,8 +107,15 @@ class Engine:
             self.__systems.run(self.__world, frame_time)
         self.__systems.clean()
 
-
 world = World()
+e = world.new_entity()
+world.add_entity(e)
+world.add_component(e, Sprite(sprites, pg.Rect(0, 0, 48, 48)))
+world.add_component(e, ScreenPosition(100, 100))
+e = world.new_entity()
+world.add_entity(e)
+world.add_component(e, Sprite(sprites, pg.Rect(0, 48, 48, 48)))
+world.add_component(e, ScreenPosition(300, 200))
 systems = SystemList()
 systems.add(InputSystem())
 systems.add(GraphicsSystem())
