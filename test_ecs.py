@@ -12,6 +12,13 @@ class B(ecs.Component):
 class C(ecs.Component):
     pass
 
+def to_set(s: ecs.EntitySet) -> set[ecs.Entity]:
+    result = set[ecs.Entity]()
+    while not s.is_empty():
+        e = s.get_entity()
+        result.add(e)
+        s.remove_entity(e)
+    return result
 
 class Test_World(unittest.TestCase):
 
@@ -132,6 +139,50 @@ class Test_World(unittest.TestCase):
         c = world.new_entity()
         world.remove_component(c, C)
         self.assertTrue(world.is_status("remove_component", "NO_ENTITY"))
+
+    def test_get_entities(self):
+        world = ecs.World()
+        a = world.new_entity()
+        world.add_entity(a)
+        world.add_component(a, A())
+        b = world.new_entity()
+        world.add_entity(b)
+        world.add_component(b, B())
+        c = world.new_entity()
+        world.add_entity(c)
+        world.add_component(c, C())
+        ab = world.new_entity()
+        world.add_entity(ab)
+        world.add_component(ab, A())
+        world.add_component(ab, B())
+        bc = world.new_entity()
+        world.add_entity(bc)
+        world.add_component(bc, B())
+        world.add_component(bc, C())
+        ac = world.new_entity()
+        world.add_entity(ac)
+        world.add_component(ac, C())
+        world.add_component(ac, A())
+        abc = world.new_entity()
+        world.add_entity(abc)
+        world.add_component(abc, A())
+        world.add_component(abc, B())
+        world.add_component(abc, C())
+        
+        s = world.get_entities({A}, set())
+        self.assertEqual(to_set(s), {a, ab, ac, abc})
+
+        s = world.get_entities({A}, {B})
+        self.assertEqual(to_set(s), {a, ac})
+
+        s = world.get_entities({A, B}, set())
+        self.assertEqual(to_set(s), {ab, abc})
+
+        s = world.get_entities(set(), {B, C})
+        self.assertEqual(to_set(s), {a})
+
+        s = world.get_entities({A, B}, {C})
+        self.assertEqual(to_set(s), {ab})
 
 
 class Test_ExtendableEntitySet(unittest.TestCase):

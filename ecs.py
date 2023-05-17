@@ -112,6 +112,20 @@ class World(Status):
             return Component()
         self._set_status("get_component", "OK")
         return self.__entities[entity][component_type]
+    
+    def get_entities(
+            self,
+            with_components: set[Type[Component]],
+            no_components: set[Type[Component]]
+            ) -> "EntitySet":
+        entities = ExtendableEntitySet()
+        for e, c in self.__entities.items():
+            if not with_components.issubset(c.keys()):
+                continue
+            if len(no_components.intersection(c.keys())) > 0:
+                continue
+            entities.add_entity(e)
+        return entities
 
 
 class EntitySet(Status):
