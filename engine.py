@@ -1,7 +1,12 @@
 import pygame as pg
+from ecs import *
 
 FPS = 30
 BACKGROUND_COLOR = (0, 0, 32)
+
+
+class InputEngine:
+    ...
 
 
 class Engine:
@@ -17,15 +22,16 @@ class Engine:
         clock = pg.time.Clock()
         while running:
             clock.tick(FPS)
+            frame_time = Timems(clock.get_time())
+            self.frame(frame_time)
             self.__screen.fill(BACKGROUND_COLOR)
-            self.frame(clock.get_time())
             pg.display.update()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     running = False
         pg.quit()
 
-    def frame(self, time: int) -> None:
-        print(time)
+    def frame(self, time_ms: int) -> None:
+        print(time_ms)
 
 Engine().run()
