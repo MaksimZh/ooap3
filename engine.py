@@ -75,8 +75,8 @@ class Engine:
     __world: World
     __systems: SystemList
 
-    def __init__(self, systems: SystemList) -> None:
-        self.__world = World()
+    def __init__(self, world: World, systems: SystemList) -> None:
+        self.__world = world
         self.__systems = systems
 
     def run(self) -> None:
@@ -87,8 +87,10 @@ class Engine:
             self.__systems.run(self.__world, frame_time)
         self.__systems.clean()
 
+
+world = World()
 systems = SystemList()
 systems.add(InputSystem())
 systems.add(GraphicsSystem())
-engine = Engine(systems)
+engine = Engine(world, systems)
 engine.run()
