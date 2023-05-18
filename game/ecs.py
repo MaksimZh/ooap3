@@ -130,6 +130,20 @@ class World(Status):
                 continue
             entities.add_entity(e)
         return entities
+    
+    # Get single entity that have all of `with_components`
+    # PRE: such entity exists
+    @status("OK", "NOT_FOUND")
+    def get_single_entity(
+            self,
+            with_components: set[Type[Component]],
+            ) -> Entity:
+        for e, c in self.__entities.items():
+            if with_components.issubset(c.keys()):
+                self._set_status("get_single_entity", "OK")
+                return e
+        self._set_status("get_single_entity", "NOT_FOUND")
+        return Entity(0)
 
 
 class EntitySet(Status):
@@ -226,17 +240,15 @@ class System(ABC):
         assert False
 
     # Clean all data before exit
-    @abstractmethod
     def clean(self) -> None:
-        assert False
+        pass
 
 
     # QUERIES
 
     # Check if system requests quit the game
-    @abstractmethod
     def requests_quit(self) -> bool:
-        assert False
+        return False
 
 
 class SystemList(System):

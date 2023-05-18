@@ -5,7 +5,8 @@ import ecs
 import engine as eg
 from input import InputSystem
 from graphics import Sprite, GraphicsSystem
-from field import FieldPosition, CameraFollow, CameraSystem
+from field import FieldPosition, CameraFollow, CameraSystem, MotionSystem
+from control import ControlSystem
 
 game_path = sys.path[0]
 sprites = pg.image.load(game_path + "/sprites.png")
@@ -28,7 +29,9 @@ add_wall(14, 16)
 add_wall(15, 16)
 add_wall(16, 16)
 systems = ecs.SystemList()
+systems.add(MotionSystem())
 systems.add(InputSystem())
+systems.add(ControlSystem())
 systems.add(CameraSystem())
 systems.add(GraphicsSystem())
 engine = eg.Engine(world, systems)

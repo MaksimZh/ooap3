@@ -1,7 +1,7 @@
 import pygame as pg
 from ecs import *
 
-FPS = 30
+FPS = 120
 
 
 class Engine:
