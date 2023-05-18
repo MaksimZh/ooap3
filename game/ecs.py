@@ -102,6 +102,8 @@ class World(Status):
         return component_type in self.__entities[entity]
     
     # Get component of given entity
+    # PRE: `entity` is in the world
+    # PRE: `entity` has component of type `component_type`
     @status("OK", "NO_ENTITY", "NO_COMPONENT")
     def get_component(self, entity: Entity, component_type: Type[Component]) -> Component:
         if not self.has_entity(entity):
@@ -113,6 +115,8 @@ class World(Status):
         self._set_status("get_component", "OK")
         return self.__entities[entity][component_type]
     
+    # Get set of entities that have all of `with_components`
+    # and none of `no_components`
     def get_entities(
             self,
             with_components: set[Type[Component]],
