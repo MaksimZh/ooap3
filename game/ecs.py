@@ -233,3 +233,85 @@ class System(ABC):
     @abstractmethod
     def requests_quit(self) -> bool:
         assert False
+
+
+class SystemList(System):
+    
+    __systems: list[System]
+    __requests_quit: bool
+
+    def __init__(self) -> None:
+        self.__systems = []
+        self.__requests_quit = False
+
+    def add(self, system: System) -> None:
+        assert system not in self.__systems
+        self.__systems.append(system)
+
+    def run(self, world: World, frame_time: Timems) -> None:
+        for system in self.__systems:
+            system.run(world, frame_time)
+            self.__requests_quit = \
+                self.__requests_quit or system.requests_quit()
+
+    def clean(self) -> None:
+        for system in self.__systems:
+            system.clean()
+    
+    def requests_quit(self) -> bool:
+        return self.__requests_quit
+
+
+class OptionalSystem(System):
+
+    __condition_system: System
+    __system: System
+
+    def __init__(self, condition: System, system: System) -> None:
+        self.__condition_system = condition
+        self.__system = system
+
+    def run(self, world: World, frame_time: Timems) -> None:
+        self.__condition_system.run(world, frame_time)
+        if self.__condition_system.requests_quit():
+            return
+        self.__system.run(world, frame_time)
+
+    def clean(self) -> None:
+        self.__condition_system.clean()
+        self.__system.clean()
+
+    def has_been_run(self) -> bool:
+        return not self.__condition_system.requests_quit()
+
+    def requests_quit(self) -> bool:
+        return self.__system.requests_quit()
+
+
+class BranchSystem(System):
+    
+    __systems: list[OptionalSystem]
+    __requests_quit: bool
+
+    def __init__(self) -> None:
+        self.__systems = []
+        self.__requests_quit = False
+
+    def add(self, system: OptionalSystem) -> None:
+        assert system not in self.__systems
+        self.__systems.append(system)
+
+    def run(self, world: World, frame_time: Timems) -> None:
+        for system in self.__systems:
+            system.run(world, frame_time)
+            self.__requests_quit = \
+                self.__requests_quit or system.requests_quit()
+            if system.has_been_run():
+                break
+
+    def clean(self) -> None:
+        for system in self.__systems:
+            system.clean()
+    
+    def requests_quit(self) -> bool:
+        return self.__requests_quit
