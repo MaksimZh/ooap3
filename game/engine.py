@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 import pygame as pg
 from ecs import *
@@ -5,7 +6,8 @@ from ecs import *
 FPS = 30
 BACKGROUND_COLOR = (0, 0, 32)
 
-sprites = pg.image.load("sprites.png")
+game_path = sys.path[0]
+sprites = pg.image.load(game_path + "/sprites.png")
 
 @dataclass
 class ScreenPosition(Component):
