@@ -54,38 +54,36 @@ class CameraSystem(System):
 
     def run(self, world: World, frame_time: Timems) -> None:
         cell_size = 48
-        screen_size_entity = world.get_single_entity({ScreenSize})
-        if world.is_status("get_single_entity", "NOT_FOUND"):
-            return
-        screen_size: ScreenSize = world.get_component(screen_size_entity, ScreenSize) #type: ignore
-        x0 = screen_size.width / 2
-        y0 = screen_size.height / 2
+        x0, y0 = self.__screen_center(world)
         camera_follow_entity = world.get_single_entity({CameraFollow, FieldPosition})
         if world.is_status("get_single_entity", "NOT_FOUND"):
             return
-        camera_field_position: FieldPosition = world.get_component(camera_follow_entity, FieldPosition) #type: ignore
-        camera_x = camera_field_position.x
-        camera_y = camera_field_position.y
-        if world.has_component(camera_follow_entity, FieldMotion):
-            motion: FieldMotion = world.get_component(camera_follow_entity, FieldMotion) #type: ignore
-            target = calc_target(camera_field_position, motion)
-            camera_x = camera_x * (1 - motion.progress) + target.x * motion.progress
-            camera_y = camera_y * (1 - motion.progress) + target.y * motion.progress
+        camera_x, camera_y = self.__exact_field_position(world, camera_follow_entity)
         entities = world.get_entities({FieldPosition}, set())
         while not entities.is_empty():
             entity = entities.get_entity()
-            field_position: FieldPosition = world.get_component(entity, FieldPosition) #type: ignore
-            x = field_position.x
-            y = field_position.y
-            if world.has_component(entity, FieldMotion):
-                motion: FieldMotion = world.get_component(entity, FieldMotion) #type: ignore
-                target = calc_target(field_position, motion)
-                x = x * (1 - motion.progress) + target.x * motion.progress
-                y = y * (1 - motion.progress) + target.y * motion.progress
+            x, y = self.__exact_field_position(world, entity)
             if not world.has_component(entity, ScreenPosition):
                 world.add_component(entity, ScreenPosition(0, 0))
             screen_position: ScreenPosition = world.get_component(entity, ScreenPosition) #type: ignore
             screen_position.x = int(x0 + (x - camera_x - 0.5) * cell_size)
             screen_position.y = int(y0 + (y - camera_y - 0.5) * cell_size)
-            sp: ScreenPosition = world.get_component(entity, ScreenPosition) #type: ignore
             entities.remove_entity(entity)
+
+    def __screen_center(self, world: World) -> tuple[float, float]:
+        screen_size_entity = world.get_single_entity({ScreenSize})
+        if world.is_status("get_single_entity", "NOT_FOUND"):
+            return 0, 0
+        screen_size: ScreenSize = world.get_component(screen_size_entity, ScreenSize) #type: ignore
+        return screen_size.width / 2, screen_size.height / 2
+    
+    def __exact_field_position(self, world: World, entity: Entity) -> tuple[float, float]:
+        field_position: FieldPosition = world.get_component(entity, FieldPosition) #type: ignore
+        x = field_position.x
+        y = field_position.y
+        if world.has_component(entity, FieldMotion):
+            motion: FieldMotion = world.get_component(entity, FieldMotion) #type: ignore
+            target = calc_target(field_position, motion)
+            x = x * (1 - motion.progress) + target.x * motion.progress
+            y = y * (1 - motion.progress) + target.y * motion.progress
+        return x, y
