@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Union
 from ecs import *
 from base import *
 from graphics import ScreenPosition, ScreenSize
@@ -15,8 +16,8 @@ class FieldMotion(Component):
     direction: Direction
     progress: float
 
-def calc_target(position: FieldPosition, motion: FieldMotion) -> FieldPosition:
-    match motion.direction:
+def calc_target(position: FieldPosition, direction: Direction) -> FieldPosition:
+    match direction:
         case Direction.UP:
             return FieldPosition(position.x, position.y - 1)
         case Direction.DOWN:
@@ -28,6 +29,39 @@ def calc_target(position: FieldPosition, motion: FieldMotion) -> FieldPosition:
 
 class CameraFollow(Component):
     pass
+
+class Frozen:
+    pass
+
+frozen = Frozen()
+
+FieldEntry = Union[None, Entity, Frozen]
+
+class GameField(Component):
+
+    __size: tuple[int, int]
+    __entities: list[list[FieldEntry]]
+
+    def __init__(self, width: int, height: int) -> None:
+        self.__size = (width, height)
+        self.__entities = [[None for _j in range(height)] for _i in range(width)]
+
+    def clear_cell(self, x: int, y: int) -> None:
+        self.__entities[x][y] = None
+
+    def freeze_cell(self, x: int, y: int) -> None:
+        self.__entities[x][y] = frozen
+
+    def set_cell(self, x: int, y: int, entity: Entity) -> None:
+        self.__entities[x][y] = entity
+
+    def is_cell_empty(self, x: int, y: int) -> bool:
+        return self.__entities[x][y] is None
+
+    def is_cell_obstacle(self, x: int, y: int) -> bool:
+        entry = self.__entities[x][y]
+        return entry is not None and entry is not frozen
+
 
 class MotionSystem(System):
 
@@ -42,12 +76,16 @@ class MotionSystem(System):
             entities.remove_entity(entity)
 
     def __finish_motion(self, world: World, entity: Entity) -> None:
+        field_entity = world.get_single_entity({GameField})
+        field: GameField = world.get_component(field_entity, GameField) #type: ignore
         position: FieldPosition = world.get_component(entity, FieldPosition) #type: ignore
         motion: FieldMotion = world.get_component(entity, FieldMotion) #type: ignore
-        target = calc_target(position, motion)
+        target = calc_target(position, motion.direction)
         world.remove_component(entity, FieldMotion)
+        field.clear_cell(position.x, position.y)
         position.x = target.x
         position.y = target.y
+        field.set_cell(position.x, position.y, entity)
 
 
 class CameraSystem(System):
@@ -83,7 +121,7 @@ class CameraSystem(System):
         y = field_position.y
         if world.has_component(entity, FieldMotion):
             motion: FieldMotion = world.get_component(entity, FieldMotion) #type: ignore
-            target = calc_target(field_position, motion)
+            target = calc_target(field_position, motion.direction)
             x = x * (1 - motion.progress) + target.x * motion.progress
             y = y * (1 - motion.progress) + target.y * motion.progress
         return x, y
