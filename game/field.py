@@ -56,11 +56,24 @@ class GameField(Component):
         self.__entities[x][y] = entity
 
     def is_cell_empty(self, x: int, y: int) -> bool:
+        if x < 0 or x >= self.__size[0]:
+            return False
+        if y < 0 or y >= self.__size[1]:
+            return False
         return self.__entities[x][y] is None
 
     def is_cell_obstacle(self, x: int, y: int) -> bool:
+        if x < 0 or x >= self.__size[0]:
+            return False
+        if y < 0 or y >= self.__size[1]:
+            return False
         entry = self.__entities[x][y]
         return entry is not None and entry is not frozen
+    
+    def get_cell_entity(self, x: int, y: int) -> Entity:
+        entry = self.__entities[x][y]
+        assert isinstance(entry, Entity)
+        return entry
 
 
 class MotionSystem(System):

@@ -4,7 +4,8 @@ from tools import Status, status
 
 Timems = NewType("Timems", int)
 
-Entity = NewType("Entity", int)
+class Entity(int):
+    pass
 
 class Component(ABC):
     pass
