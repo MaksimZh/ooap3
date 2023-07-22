@@ -44,5 +44,5 @@ class ConsumeSystem(System):
             entities.remove_entity(entity)
             position: FieldPosition = world.get_component(entity, FieldPosition) #type: ignore
             field.clear_cell(position.x, position.y)
-            world.remove_entity(entity)
+            world.clean_entity(entity)
 

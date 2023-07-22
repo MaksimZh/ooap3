@@ -49,6 +49,5 @@ class GraphicsSystem(System):
     
     def __add_screen_size(self, world: World) -> None:
         screen = world.new_entity()
-        world.add_entity(screen)
         width, height = self.__screen.get_size()
         world.add_component(screen, ScreenSize(width, height))

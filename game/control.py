@@ -5,7 +5,7 @@ from input import Command
 from field import GameField, FieldPosition, FieldMotion, calc_target
 
 @dataclass
-class Step:
+class Step(Component):
     direction: Direction
 
 class ControlSystem(System):

@@ -50,7 +50,6 @@ level = [
 world = ecs.World()
 field = GameField(len(level[0]), len(level))
 e = world.new_entity()
-world.add_entity(e)
 world.add_component(e, field)
 
 for y in range(len(level)):
@@ -59,7 +58,6 @@ for y in range(len(level)):
         if cell not in components:
             continue
         e = world.new_entity()
-        world.add_entity(e)
         world.add_component(e, FieldPosition(x, y))
         field.set_cell(x, y, e)
         for c in components[cell]:
