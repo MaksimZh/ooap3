@@ -125,7 +125,7 @@ class CameraSystem(System):
         if world.is_status("get_component", "NO_COMPONENT"):
             return 0, 0
         return screen_size.width / 2, screen_size.height / 2
-    
+
     def __exact_field_position(self, world: World, entity: Entity) -> tuple[float, float]:
         field_position: FieldPosition = world.get_component(entity, FieldPosition) #type: ignore
         x = field_position.x
