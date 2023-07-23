@@ -29,8 +29,7 @@ class GraphicsSystem(System):
         self.__screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
 
     def run(self, world: World, frame_time: Timems) -> None:
-        world.get_single_entity({ScreenSize})
-        if world.is_status("get_single_entity", "NOT_FOUND"):
+        if not world.has_component(world.get_global_entity(), ScreenSize):
             self.__add_screen_size(world)
         self.__screen.fill(BACKGROUND_COLOR)
         entities = world.get_entities({Sprite, ScreenPosition}, set())
@@ -48,6 +47,5 @@ class GraphicsSystem(System):
         pg.display.quit()
     
     def __add_screen_size(self, world: World) -> None:
-        screen = world.new_entity()
         width, height = self.__screen.get_size()
-        world.add_component(screen, ScreenSize(width, height))
+        world.add_component(world.get_global_entity(), ScreenSize(width, height))

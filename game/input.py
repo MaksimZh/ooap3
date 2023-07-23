@@ -47,7 +47,10 @@ class InputSystem(System):
     def __process_key_down(self, world: World, key: int) -> None:
         if not key in key_directions:
             return
-        hero = world.get_single_entity({PlayerControl})
+        heroes = world.get_entities({PlayerControl}, set())
+        if heroes.is_empty():
+            return
+        hero = heroes.get_entity()
         if not world.has_component(hero, Command):
             world.add_component(hero, Command(Direction.UP, False))
         command: Command = world.get_component(hero, Command) #type: ignore
@@ -57,7 +60,10 @@ class InputSystem(System):
     def __process_key_up(self, world: World, key: int) -> None:
         if not key in key_directions:
             return
-        hero = world.get_single_entity({PlayerControl})
+        heroes = world.get_entities({PlayerControl}, set())
+        if heroes.is_empty():
+            return
+        hero = heroes.get_entity()
         if not world.has_component(hero, Command):
             return
         command: Command = world.get_component(hero, Command) #type: ignore

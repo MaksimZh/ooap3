@@ -13,13 +13,13 @@ class ExitStepSystem(System):
         self.__end = False
 
     def run(self, world: World, frame_time: Timems) -> None:
-        field_entity = world.get_single_entity({GameField})
-        field: GameField = world.get_component(field_entity, GameField) #type: ignore
-        if world.is_status("get_single_entity", "NOT_FOUND"):
+        field: GameField = world.get_component(world.get_global_entity(), GameField) #type: ignore
+        if world.is_status("get_component", "NO_COMPONENT"):
             return
-        hero = world.get_single_entity({Step, FieldPosition})
-        if world.is_status("get_single_entity", "NOT_FOUND"):
+        heroes = world.get_entities({Step, FieldPosition}, set())
+        if heroes.is_empty():
             return
+        hero = heroes.get_entity()
         if world.has_component(hero, FieldMotion):
             return
         position: FieldPosition = world.get_component(hero, FieldPosition) #type: ignore

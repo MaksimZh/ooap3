@@ -12,12 +12,14 @@ class Component(ABC):
 
 class World(Status):
     
+    __global_entity: Entity
     __entities: dict[Entity, dict[Type[Component], Component]]
 
     #CONSTRUCTOR
     def __init__(self) -> None:
         super().__init__()
         self.__next_id = 0
+        self.__global_entity = Entity()
         self.__entities = dict()
 
     
@@ -92,19 +94,9 @@ class World(Status):
             entities.add_entity(e)
         return entities
     
-    # Get single entity that have all of `with_components`
-    # PRE: such entity exists
-    @status("OK", "NOT_FOUND")
-    def get_single_entity(
-            self,
-            with_components: set[Type[Component]],
-            ) -> Entity:
-        for e, c in self.__entities.items():
-            if with_components.issubset(c.keys()):
-                self._set_status("get_single_entity", "OK")
-                return e
-        self._set_status("get_single_entity", "NOT_FOUND")
-        return Entity()
+    # Get special entity to store global data
+    def get_global_entity(self) -> Entity:
+        return self.__global_entity
 
 
 class EntitySet(Status):

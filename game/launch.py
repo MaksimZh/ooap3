@@ -49,8 +49,7 @@ level = [
 
 world = ecs.World()
 field = GameField(len(level[0]), len(level))
-e = world.new_entity()
-world.add_component(e, field)
+world.add_component(world.get_global_entity(), field)
 
 for y in range(len(level)):
     for x in range(len(level[0])):

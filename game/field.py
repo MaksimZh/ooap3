@@ -89,8 +89,7 @@ class MotionSystem(System):
             entities.remove_entity(entity)
 
     def __finish_motion(self, world: World, entity: Entity) -> None:
-        field_entity = world.get_single_entity({GameField})
-        field: GameField = world.get_component(field_entity, GameField) #type: ignore
+        field: GameField = world.get_component(world.get_global_entity(), GameField) #type: ignore
         position: FieldPosition = world.get_component(entity, FieldPosition) #type: ignore
         motion: FieldMotion = world.get_component(entity, FieldMotion) #type: ignore
         target = calc_target(position, motion.direction)
@@ -106,10 +105,10 @@ class CameraSystem(System):
     def run(self, world: World, frame_time: Timems) -> None:
         cell_size = 48
         x0, y0 = self.__screen_center(world)
-        camera_follow_entity = world.get_single_entity({CameraFollow, FieldPosition})
-        if world.is_status("get_single_entity", "NOT_FOUND"):
+        camera_follow_entities = world.get_entities({CameraFollow, FieldPosition}, set())
+        if camera_follow_entities.is_empty():
             return
-        camera_x, camera_y = self.__exact_field_position(world, camera_follow_entity)
+        camera_x, camera_y = self.__exact_field_position(world, camera_follow_entities.get_entity())
         entities = world.get_entities({FieldPosition}, set())
         while not entities.is_empty():
             entity = entities.get_entity()
@@ -122,10 +121,9 @@ class CameraSystem(System):
             entities.remove_entity(entity)
 
     def __screen_center(self, world: World) -> tuple[float, float]:
-        screen_size_entity = world.get_single_entity({ScreenSize})
-        if world.is_status("get_single_entity", "NOT_FOUND"):
+        screen_size: ScreenSize = world.get_component(world.get_global_entity(), ScreenSize) #type: ignore
+        if world.is_status("get_component", "NO_COMPONENT"):
             return 0, 0
-        screen_size: ScreenSize = world.get_component(screen_size_entity, ScreenSize) #type: ignore
         return screen_size.width / 2, screen_size.height / 2
     
     def __exact_field_position(self, world: World, entity: Entity) -> tuple[float, float]:
