@@ -23,14 +23,20 @@ class ControlSystem(System):
         return components
 
 
-class ForbiddenTarget:
+class EmptyTarget(Component):
     pass
 
-forbidden_target = ForbiddenTarget()
+empty_target = EmptyTarget()
+
+class ForbiddenTarget(Component):
+    pass
+
+forbidden_target = EmptyTarget()
 
 @dataclass
 class Target(Component):
-    target: None | Entity | ForbiddenTarget
+    target: Entity
+
 
 class TargetSystem(System):
     
@@ -44,13 +50,13 @@ class TargetSystem(System):
             step: Step = components[Step] #type: ignore
             target_position = calc_target(position, step.direction)
             if field.is_cell_empty(target_position.x, target_position.y):
-                components[Target] = Target(None)
+                components[EmptyTarget] = empty_target
                 return components
-            if not field.is_cell_obstacle(target_position.x, target_position.y):
-                components[Target] = Target(forbidden_target)
+            if field.is_cell_obstacle(target_position.x, target_position.y):
+                target = field.get_cell_entity(target_position.x, target_position.y)
+                components[Target] = Target(target)
                 return components
-            target = field.get_cell_entity(target_position.x, target_position.y)
-            components[Target] = Target(target)
+            components[ForbiddenTarget] = forbidden_target
             return components
         
         world.process_entities(
@@ -62,21 +68,15 @@ class TargetSystem(System):
 class StepSystem(System):
 
     def run(self, world: World, frame_time: Timems) -> None:
-        field: GameField = world.get_component(world.get_global_entity(), GameField) #type: ignore
-        if world.is_status("get_component", "NO_COMPONENT"):
-            return
-        heroes = world.get_entities({Step, FieldPosition}, set())
-        if heroes.is_empty():
-            return
-        hero = heroes.get_entity()
-        if world.has_component(hero, FieldMotion):
-            return
-        position: FieldPosition = world.get_component(hero, FieldPosition) #type: ignore
-        step: Step = world.get_component(hero, Step) #type: ignore
-        target_position = calc_target(position, step.direction)
-        if field.is_cell_empty(target_position.x, target_position.y):
-            world.add_component(hero, FieldMotion(step.direction, 0))
-            return
+        def process(components: ComponentDict) -> ComponentDict:
+            step: Step = components[Step] #type: ignore
+            components[FieldMotion] = FieldMotion(step.direction, 0)
+            return components
+
+        world.process_entities(
+            with_components={Step, FieldPosition, EmptyTarget},
+            no_components={FieldMotion},
+            process=process)
 
 
 class ClearStepSystem(System):
@@ -85,7 +85,12 @@ class ClearStepSystem(System):
         
         def process(components: ComponentDict) -> ComponentDict:
             del components[Step]
-            del components[Target]
+            if Target in components:
+                del components[Target]
+            if ForbiddenTarget in components:
+                del components[ForbiddenTarget]
+            if EmptyTarget in components:
+                del components[EmptyTarget]
             return components
         
-        world.process_entities({Step, Target}, set(), process)
+        world.process_entities({Step}, set(), process)
