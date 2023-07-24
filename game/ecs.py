@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import NewType, Type
+from typing import NewType, Type, Callable
 from tools import Status, status
+
 
 Timems = NewType("Timems", int)
 
@@ -9,6 +10,12 @@ class Entity:
 
 class Component(ABC):
     pass
+
+
+ComponentDict = dict[Type[Component], Component]
+
+ProcessFunc = Callable[[ComponentDict], ComponentDict]
+
 
 class World(Status):
     
@@ -55,7 +62,22 @@ class World(Status):
         del self.__entities[entity][component_type]
         self._set_status("remove_component", "OK")
 
-    
+    # Apply function to components of each entity
+    # that have all of `with_components`
+    # and none of `no_components`
+    def process_entities(
+            self,
+            with_components: set[Type[Component]],
+            no_components: set[Type[Component]],
+            process: ProcessFunc
+            ) -> None:
+        entities = self.get_entities(with_components, no_components)
+        while not entities.is_empty():
+            e = entities.get_entity()
+            self.__entities[e] = process(self.__entities[e])
+            entities.remove_entity(e)
+
+
     # QUERIES
 
     # Return entity that has no components

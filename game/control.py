@@ -11,18 +11,16 @@ class Step(Component):
 class ControlSystem(System):
 
     def run(self, world: World, frame_time: Timems) -> None:
-        heroes = world.get_entities({Command, FieldPosition}, set())
-        if heroes.is_empty():
-            return
-        hero = heroes.get_entity()
-        command: Command = world.get_component(hero, Command) #type: ignore
+        world.process_entities({Command, FieldPosition}, set(), self.__process)
+
+    def __process(self, components: ComponentDict) -> ComponentDict:
+        command: Command = components[Command] #type: ignore
         if command.single:
-            world.remove_component(hero, Command)
-        if world.has_component(hero, FieldMotion):
-            return
-        if world.has_component(hero, Step):
-            return
-        world.add_component(hero, Step(command.direction))
+            del components[Command]
+        if FieldMotion in components or Step in components:
+            return components
+        components[Step] = Step(command.direction)
+        return components
 
 
 class StepSystem(System):
