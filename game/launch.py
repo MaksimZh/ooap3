@@ -6,7 +6,7 @@ import engine as eg
 from input import InputSystem, PlayerControl
 from graphics import Sprite, GraphicsSystem
 from field import GameField, FieldPosition, CameraFollow, CameraSystem, MotionSystem
-from control import ControlSystem, StepSystem, ClearStepSystem
+from control import ControlSystem, TargetSystem, StepSystem, ClearStepSystem
 from consume import Consumable, ConsumeStepSystem, ConsumeSystem
 from exit import Exit, ExitStepSystem
 
@@ -66,6 +66,7 @@ systems = ecs.SystemList()
 systems.add(MotionSystem())
 systems.add(InputSystem())
 systems.add(ControlSystem())
+systems.add(TargetSystem())
 systems.add(StepSystem())
 systems.add(ConsumeStepSystem())
 systems.add(ExitStepSystem())

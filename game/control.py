@@ -23,6 +23,42 @@ class ControlSystem(System):
         return components
 
 
+class ForbiddenTarget:
+    pass
+
+forbidden_target = ForbiddenTarget()
+
+@dataclass
+class Target(Component):
+    target: None | Entity | ForbiddenTarget
+
+class TargetSystem(System):
+    
+    def run(self, world: World, frame_time: Timems) -> None:
+        field: GameField = world.get_component(world.get_global_entity(), GameField) #type: ignore
+        if world.is_status("get_component", "NO_COMPONENT"):
+            return
+        
+        def process(components: ComponentDict) -> ComponentDict:
+            position: FieldPosition = components[FieldPosition] #type: ignore
+            step: Step = components[Step] #type: ignore
+            target_position = calc_target(position, step.direction)
+            if field.is_cell_empty(target_position.x, target_position.y):
+                components[Target] = Target(None)
+                return components
+            if not field.is_cell_obstacle(target_position.x, target_position.y):
+                components[Target] = Target(forbidden_target)
+                return components
+            target = field.get_cell_entity(target_position.x, target_position.y)
+            components[Target] = Target(target)
+            return components
+        
+        world.process_entities(
+            with_components={Step, FieldPosition},
+            no_components={FieldMotion},
+            process=process)
+
+
 class StepSystem(System):
 
     def run(self, world: World, frame_time: Timems) -> None:
@@ -42,11 +78,14 @@ class StepSystem(System):
             world.add_component(hero, FieldMotion(step.direction, 0))
             return
 
+
 class ClearStepSystem(System):
 
     def run(self, world: World, frame_time: Timems) -> None:
-        heroes = world.get_entities({Step, FieldPosition}, set())
-        if heroes.is_empty():
-            return
-        hero = heroes.get_entity()
-        world.remove_component(hero, Step)
+        
+        def process(components: ComponentDict) -> ComponentDict:
+            del components[Step]
+            del components[Target]
+            return components
+        
+        world.process_entities({Step, Target}, set(), process)
